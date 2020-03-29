@@ -42,6 +42,7 @@ trait AdminExtensionControllerTrait
         $requestParameters['referer'] = (string) $masterRequestUri;
 
         $viewVars = [
+            'objectType' => 'entity',
             'paginator' => $paginator,
             'fields' => $fields,
             '_request_parameters' => $requestParameters,
