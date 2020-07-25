@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace AlterPHP\EasyAdminExtensionBundle\Helper;
 
+use AlterPHP\EasyAdminExtensionBundle\Form\Type\ListFilterType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
-use Symfony\Component\Form\FormFactory;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -15,7 +16,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class ListFormFiltersHelper
 {
     /**
-     * @var FormFactory
+     * @var FormFactoryInterface
      */
     private $formFactory;
 
@@ -35,11 +36,9 @@ class ListFormFiltersHelper
     private $formCsrfEnabled;
 
     /**
-     * @param FormFactory  $formFactory
-     * @param RequestStack $requestStack
-     * @param bool         $formCsrfEnabled
+     * @param bool $formCsrfEnabled
      */
-    public function __construct(FormFactory $formFactory, RequestStack $requestStack, $formCsrfEnabled)
+    public function __construct(FormFactoryInterface $formFactory, RequestStack $requestStack, $formCsrfEnabled)
     {
         $this->formFactory = $formFactory;
         $this->requestStack = $requestStack;
@@ -49,7 +48,7 @@ class ListFormFiltersHelper
     public function getListFormFilters(array $formFilters): FormInterface
     {
         if (null === $this->listFiltersForm) {
-            $formOptions = array();
+            $formOptions = [];
             if ($this->formCsrfEnabled) {
                 $formOptions['csrf_protection'] = false;
             }
@@ -58,17 +57,21 @@ class ListFormFiltersHelper
             );
 
             foreach ($formFilters as $name => $config) {
-                $label = $config['label'] ?? null;
+                $listFilterformOptions = [
+                    'label' => $config['label'] ?? null,
+                    'translation_domain' => $config['translation_domain'] ?? null,
+                    'required' => false,
+                    'input_type' => $config['type'],
+                    'input_type_options' => $config['type_options'] ?? [],
+                ];
+                if (isset($config['operator'])) {
+                    $listFilterformOptions['operator'] = $config['operator'];
+                }
+                if (isset($config['property'])) {
+                    $listFilterformOptions['property'] = $config['property'];
+                }
 
-                $formBuilder->add(
-                    $name,
-                    $config['type'] ?? null,
-                    \array_merge(
-                        array('label' => $label),
-                        array('required' => false),
-                        isset($config['type_options']) ? $config['type_options'] : [],
-                    )
-                );
+                $formBuilder->add($name, ListFilterType::class, $listFilterformOptions);
             }
 
             $this->listFiltersForm = $formBuilder->setMethod('GET')->getForm();
