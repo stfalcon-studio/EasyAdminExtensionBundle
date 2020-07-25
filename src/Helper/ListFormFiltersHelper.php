@@ -58,12 +58,15 @@ class ListFormFiltersHelper
             );
 
             foreach ($formFilters as $name => $config) {
+                $label = $config['label'] ?? null;
+
                 $formBuilder->add(
                     $name,
                     $config['type'] ?? null,
                     \array_merge(
+                        array('label' => $label),
                         array('required' => false),
-                        isset($config['type_options']) ? $config['type_options'] : []
+                        isset($config['type_options']) ? $config['type_options'] : [],
                     )
                 );
             }
