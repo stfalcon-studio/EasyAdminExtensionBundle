@@ -119,9 +119,9 @@ class PostQueryBuilderSubscriber implements EventSubscriberInterface
         foreach ($listFormFiltersForm as $formField) {
             $field = $formField->getName();
 
-            $attributes = $formField->getConfig()->getAttribute('data_collector/passed_options', []);
-            if (isset($attributes['attr']) && isset($attributes['attr']['mappedField'])) {
-                $field = $attributes['attr']['mappedField'];
+            $options = $formField->getConfig()->getOptions();
+            if (isset($options['attr']) && isset($options['attr']['mappedField'])) {
+                $field = $options['attr']['mappedField'];
             }
 
             $value = $formField->getData();
