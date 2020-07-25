@@ -8,6 +8,7 @@ use Doctrine\ORM\Query\QueryException;
 use EasyCorp\Bundle\EasyAdminBundle\Event\EasyAdminEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
+use Symfony\Component\Form\FormInterface;
 
 /**
  * Apply filters on list/search queryBuilder.
@@ -60,7 +61,7 @@ class PostQueryBuilderSubscriber implements EventSubscriberInterface
             if (isset($entityConfig['list']['form_filters'])) {
                 $listFormFiltersForm = $this->listFormFiltersHelper->getListFormFilters($entityConfig['list']['form_filters']);
                 if ($listFormFiltersForm->isSubmitted() && $listFormFiltersForm->isValid()) {
-                    $this->applyFormFilters($queryBuilder, $listFormFiltersForm->getData());
+                    $this->applyFormFilters($queryBuilder, $listFormFiltersForm);
                 }
             }
         }
@@ -109,12 +110,22 @@ class PostQueryBuilderSubscriber implements EventSubscriberInterface
     /**
      * Applies form filters on queryBuilder.
      *
-     * @param QueryBuilder $queryBuilder
-     * @param array        $filters
+     * @param QueryBuilder  $queryBuilder
+     * @param FormInterface $filters
      */
-    protected function applyFormFilters(QueryBuilder $queryBuilder, array $filters = array())
+    protected function applyFormFilters(QueryBuilder $queryBuilder, FormInterface $listFormFiltersForm)
     {
-        foreach ($filters as $field => $value) {
+        /** @var FormInterface $formField */
+        foreach ($listFormFiltersForm as $formField) {
+            $field = $formField->getName();
+
+            $attributes = $formField->getConfig()->getAttribute('data_collector/passed_options', []);
+            if (isset($attributes['attr']) && isset($attributes['attr']['mappedField'])) {
+                $field = $attributes['attr']['mappedField'];
+            }
+
+            $value = $formField->getData();
+
             $value = $this->filterEasyadminAutocompleteValue($value);
             // Empty string and numeric keys is considered as "not applied filter"
             if (null === $value || '' === $value || \is_int($field)) {
